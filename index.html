@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Email Slicer</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 500px;
+            width: 100%;
+        }
+
+        h1 {
+            color: #667eea;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+        }
+
+        .input-group {
+            margin-bottom: 25px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 600;
+        }
+
+        input[type="email"] {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+
+        input[type="email"]:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .results {
+            margin-top: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            display: none;
+        }
+
+        .results.show {
+            display: block;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .results h2 {
+            color: #667eea;
+            margin-bottom: 15px;
+            font-size: 1.5em;
+        }
+
+        .result-item {
+            padding: 10px;
+            margin-bottom: 10px;
+            background: white;
+            border-radius: 6px;
+            border-left: 4px solid #667eea;
+        }
+
+        .result-item strong {
+            color: #764ba2;
+        }
+
+        .error {
+            color: #e74c3c;
+            margin-top: 10px;
+            padding: 10px;
+            background: #ffe5e5;
+            border-radius: 6px;
+            display: none;
+        }
+
+        .error.show {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📧 Email Slicer</h1>
+        
+        <div class="input-group">
+            <label for="emailInput">Enter your email:</label>
+            <input type="email" id="emailInput" placeholder="example@domain.com" required>
+        </div>
+        
+        <button onclick="sliceEmail()">Slice Email</button>
+        
+        <div class="error" id="error"></div>
+        
+        <div class="results" id="results">
+            <h2>Results:</h2>
+            <div class="result-item">
+                <strong>Username:</strong> <span id="username"></span>
+            </div>
+            <div class="result-item">
+                <strong>Domain:</strong> <span id="domain"></span>
+            </div>
+            <div class="result-item">
+                <strong>Extension:</strong> <span id="extension"></span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function sliceEmail() {
+            const emailInput = document.getElementById('emailInput');
+            const email = emailInput.value.trim();
+            const resultsDiv = document.getElementById('results');
+            const errorDiv = document.getElementById('error');
+            
+            // Clear previous results and errors
+            resultsDiv.classList.remove('show');
+            errorDiv.classList.remove('show');
+            
+            // Validate email format
+            if (!email) {
+                showError('Please enter an email address');
+                return;
+            }
+            
+            if (!email.includes('@')) {
+                showError('Invalid email: missing @ symbol');
+                return;
+            }
+            
+            try {
+                // Split username and domain
+                const [username, domain] = email.split('@');
+                
+                if (!username || !domain) {
+                    showError('Invalid email format');
+                    return;
+                }
+                
+                // Split domain and extension
+                if (!domain.includes('.')) {
+                    showError('Invalid email: domain must have an extension');
+                    return;
+                }
+                
+                const parts = domain.split('.');
+                if (parts.length < 2) {
+                    showError('Invalid email: incomplete domain');
+                    return;
+                }
+                
+                const domainName = parts[0];
+                const extension = parts.slice(1).join('.');
+                
+                // Display results
+                document.getElementById('username').textContent = username;
+                document.getElementById('domain').textContent = domainName;
+                document.getElementById('extension').textContent = extension;
+                
+                resultsDiv.classList.add('show');
+            } catch (error) {
+                showError('Error parsing email. Please check the format.');
+            }
+        }
+        
+        function showError(message) {
+            const errorDiv = document.getElementById('error');
+            errorDiv.textContent = message;
+            errorDiv.classList.add('show');
+        }
+        
+        // Allow Enter key to submit
+        document.getElementById('emailInput').addEventListener('keypress', function(event) {
+            if (event.key === 'Enter') {
+                sliceEmail();
+            }
+        });
+    </script>
+</body>
+</html>
